@@ -1,14 +1,13 @@
-# Dùng image OpenJDK 17
-FROM openjdk:17-jdk-slim
-
-# Đặt thư mục làm việc
+# Stage 1: Build jar
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copy file jar đã build từ target/
-COPY target/taskmanager-be-0.0.1-SNAPSHOT.jar app.jar
-
-# Cấu hình cổng cho container
+# Stage 2: Run jar
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Lệnh chạy Spring Boot
 ENTRYPOINT ["java", "-jar", "app.jar"]
